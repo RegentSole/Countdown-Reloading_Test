@@ -4,7 +4,7 @@ using System.Collections;
 
 public class CombinedAbilities : MonoBehaviour
 {
-    public enum AbilityType { ChangeColor, MoveObject };
+    public enum AbilityType { ChangeColor, MoveObject, ScaleUp };
 
     private Dictionary<AbilityType, Coroutine> activeCoroutines = new Dictionary<AbilityType, Coroutine>();
 
@@ -15,32 +15,51 @@ public class CombinedAbilities : MonoBehaviour
     public Vector2 moveDistance = new Vector2(10f, 0f);
     public float moveCooldown = 3f;
 
+    [Header("Scale Up Settings")]
+    public float scaleFactor = 2f; // Во сколько раз увеличить размер объекта
+    public float scaleDuration = 3f; // Сколько секунд держать увеличенным
+    public float scaleUpCooldown = 5f; // Время кулдауна для этой способности
+
     public void UseChangeColorAbility()
     {
         if (!IsAbilityActive(AbilityType.ChangeColor))
-    {
-        StartCoroutine(CooldownRoutine(AbilityType.ChangeColor, colorCooldown));
-        ChangeColor();
-        Debug.Log("Цвет был изменён!");
-    }
-    else
-    {
-        Debug.Log("Способность в кулдауне.");
-    }
+        {
+            StartCoroutine(CooldownRoutine(AbilityType.ChangeColor, colorCooldown));
+            ChangeColor();
+            Debug.Log("Цвет был изменён!");
+        }
+        else
+        {
+            Debug.Log("Способность в кулдауне.");
+        }
     }
 
     public void UseMoveObjectAbility()
     {
         if (!IsAbilityActive(AbilityType.MoveObject))
-    {
-        StartCoroutine(CooldownRoutine(AbilityType.MoveObject, moveCooldown));
-        MoveObject();
-        Debug.Log("Объект был перемещён!");
+        {
+            StartCoroutine(CooldownRoutine(AbilityType.MoveObject, moveCooldown));
+            MoveObject();
+            Debug.Log("Объект был перемещён!");
+        }
+        else
+        {
+            Debug.Log("Способность в кулдауне.");
+        }
     }
-    else
+
+    public void UseScaleUpAbility()
     {
-        Debug.Log("Способность в кулдауне.");
-    }
+        if (!IsAbilityActive(AbilityType.ScaleUp))
+        {
+            StartCoroutine(CooldownRoutine(AbilityType.ScaleUp, scaleUpCooldown));
+            ScaleUpObject();
+            Debug.Log("Размер объекта увеличен!");
+        }
+        else
+        {
+            Debug.Log("Способность в кулдауне.");
+        }
     }
 
     private bool IsAbilityActive(AbilityType type)
@@ -49,13 +68,13 @@ public class CombinedAbilities : MonoBehaviour
     }
 
     private IEnumerator CooldownRoutine(AbilityType type, float cooldownTime)
-{
-    Debug.Log($"Starting cooldown for {type}: {cooldownTime} seconds.");
-    activeCoroutines[type] = null;
-    yield return new WaitForSeconds(cooldownTime);
-    Debug.Log($"{type} cooldown finished.");
-    activeCoroutines.Remove(type);
-}
+    {
+        Debug.Log($"Starting cooldown for {type}: {cooldownTime} seconds.");
+        activeCoroutines[type] = null;
+        yield return new WaitForSeconds(cooldownTime);
+        Debug.Log($"{type} cooldown finished.");
+        activeCoroutines.Remove(type);
+    }
 
     private void ChangeColor()
     {
@@ -73,5 +92,16 @@ public class CombinedAbilities : MonoBehaviour
         {
             rigidbody.AddForce(moveDistance, ForceMode2D.Impulse); // Перемещаем объект
         }
+    }
+
+    private void ScaleUpObject()
+    {
+        transform.localScale *= scaleFactor; // Увеличение масштаба объекта
+        Invoke(nameof(RestoreOriginalScale), scaleDuration); // Возвращение к исходному масштабу через scaleDuration секунд
+    }
+
+    private void RestoreOriginalScale()
+    {
+        transform.localScale /= scaleFactor; // Возврат к исходному масштабу
     }
 }
